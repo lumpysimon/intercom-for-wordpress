@@ -5,7 +5,7 @@ Plugin URI: http://lumpylemon.co.uk/plugins/intercom-crm-for-wordpress
 Description: Integrate the <a href="http://intercom.io">Intercom</a> CRM and messaging app into your WordPress website.
 Author: Simon Blackbourn
 Author URI: https://twitter.com/lumpysimon
-Version: 0.7
+Version: 0.8
 
 
 
@@ -43,7 +43,7 @@ Version: 0.7
 
 	I'm Simon Blackbourn, co-founder of Lumpy Lemon, a friendly UK-based WordPress design & development company specialising in custom-built WordPress CMS sites. I work mainly, but not exclusively, with not-for-profit organisations.
 
-	Find me on Twitter, Skype & GitHub: lumpysimon
+	Find me on Twitter and GitHub: lumpysimon
 
 
 
@@ -55,7 +55,7 @@ defined( 'ABSPATH' ) or die();
 
 
 
-define( 'LL_INTERCOM_VERSION', '0.7' );
+define( 'LL_INTERCOM_VERSION', '0.8' );
 
 
 
@@ -204,7 +204,7 @@ class ll_intercom {
 
 		// don't do anything if the app id and secret key fields have not been set
 
-		if ( !isset( $opts['app-id'] ) or !isset( $opts['secure'] ) or empty( $opts['app-id'] ) or empty( $opts['secure'] ) )
+		if ( !isset( $opts['app-id'] ) or !$opts['app-id'] )
 			return;
 
 		// if we're sending the user role as custom data then
@@ -223,11 +223,13 @@ class ll_intercom {
 
 		// calculate the security hash using the user id
 
-		$hash = hash_hmac(
-			'sha256',
-			$current_user->ID,
-			$opts['secure']
-			);
+		if ( isset( $opts['secure'] ) and $opts['secure'] ) {
+			$hash = hash_hmac(
+				'sha256',
+				$current_user->ID,
+				$opts['secure']
+				);
+		}
 
 		// set the required username format
 
@@ -268,11 +270,14 @@ class ll_intercom {
 			'email'      => $current_user->user_email,
 			'name'       => $username,
 			'created_at' => strtotime( $current_user->user_registered ),
-			'user_hash'  => $hash,
 			'widget'     => (object) array(
 				'activator' => $activator
 				)
 			);
+
+		if ( isset( $opts['secure'] ) and $opts['secure'] ) {
+			$settings['user_hash'] = $hash;
+		}
 
 		if ( ! empty( $custom ) ) {
 			foreach ( $custom as $k => $v ) {
@@ -331,10 +336,10 @@ class ll_intercom {
 
 		$opts = self::get_settings();
 
-		if ( !is_network_admin() and ( !isset( $opts['app-id'] ) or empty( $opts['app-id'] ) or !isset( $opts['secure'] ) or empty( $opts['secure'] ) ) ) {
+		if ( !is_network_admin() and ( !isset( $opts['app-id'] ) or !$opts['app-id'] ) ) {
 			echo '<div class="error" id="ll-intercom-notice"><p><strong>Intercom needs some attention</strong>. ';
 			if ( isset( $_GET['page'] ) and 'intercom' == $_GET['page'] ) {
-				echo 'Please enter your Intercom application ID and secret key';
+				echo 'Please enter your Intercom application ID';
 			} else {
 				echo 'Please <a href="options-general.php?page=intercom">configure the Intercom settings</a>';
 			}

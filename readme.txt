@@ -2,8 +2,8 @@
 Contributors: lumpysimon
 Donate link: http://lumpylemon.co.uk/donate
 Tags: intercom, intercom.io, crm, messaging, contact form, support, email, feedback, customer relationship management, users
-Requires at least: 3.5
-Tested up to: 3.6
+Requires at least: 3.8
+Tested up to: 3.8.1
 Stable tag: trunk
 
 Easy integration of the Intercom CRM and messaging app into your WordPress website.
@@ -19,8 +19,6 @@ You can also optionally send extra custom data about your users.
 = Important! =
 
 As of version 0.7 the "ll_intercom_custom_data" filter is not backwards compatible with earlier versions. Please see "Can I add my own custom data?" on the [FAQ page](http://wordpress.org/plugins/intercom-for-wordpress/faq) for instructions.
-
-"Secure mode" is mandatory as of version 0.6. You must enter both your app ID and your secret key. If you are upgrading from an earlier version where you didn't use secure mode, you will now need to enter your secret key otherwise your users will not be tracked.
 
 == Frequently Asked Questions ==
 
@@ -93,11 +91,11 @@ function my_intercom_activator( $activator ) {
 
 = Are Intercom and this plugin secure? =
 
-Intercom's "secure mode" is now mandatory. Your Intercom secret key is used to generate a 'hash' with every request - this prevents users maliciously sending messages as another user. If you do not enter your secret key in the settings screen, this plugin will do nothing.
+It is highly recommended to enable Intercom's "secure mode". All communications between your website and Intercom will then use a secret key to generate a 'hash' with every request - this prevents users maliciously sending messages as another user.
 
 = Does this plugin work on older versions of WordPress or PHP? =
 
-Possibly, but I've not tried. I can only provide support if you're using the latest version of this plugin together with WordPress 3.5 or newer and PHP 5.2.4 or newer.
+Possibly, but I've not tried. I can only provide support if you're using the latest version of this plugin together with the latest version of WordPress and PHP 5.2.4 or newer.
 
 == Installation ==
 
@@ -105,45 +103,49 @@ Possibly, but I've not tried. I can only provide support if you're using the lat
 2. Activate the plugin through the Plugins menu in WordPress.
 3. Go to the settings page.
 4. Enter your Intercom App ID.
-5. Enable secure mode in Intercom and enter your secret key in the settings screen (it's a combination of letters and numbers, similar to your App ID).
 6. Choose your preferred username format, optional custom data and whether to track admin pages.
+7. Highly recommended: for extra security, enable secure mode from within your Intercom app and enter your secret key in the settings page.
 
 == Changelog ==
 
-= 0.7 =
+= 0.8 (23rd January 2104) =
+* Make secure mode optional
+* Update installation instructions and FAQ
+
+= 0.7 (September 2013) =
 * Use json_encode for generating the install code (thanks to [John Blackbourn](http://profiles.wordpress.org/johnbillion))
 * Send user ID by default and remove from settings screen
 * Add ll_intercom_activator filter so plugins/themes can use their own link ID/class
 
-= 0.6 =
+= 0.6 (July 2013) =
 * Make the secret key field mandatory and do not output the install code if it is not set
 * Remove redundant code that was generating a PHP notice
 * Tested for compatibility with WordPress 3.6
 
-= 0.5 =
+= 0.5 (June 2013) =
 * Add option to allow tracking of admin pages (off by default)
 * Update install code to load JavaScript from CDN
 
-= 0.4 =
+= 0.4 (April 2013) =
 * Use latest version of the install code
 * Add filter (ll_intercom_custom_data) so plugins/themes can add their own custom data
 
-= 0.3.1 =
+= 0.3.1 (January 2013) =
 * Fix Multisite network-activated options saving bug
 * Remove default options
 
-= 0.3 =
+= 0.3 (January 2013) =
 * Fix kses missing arguments bug
 * Multisite-compatible options page
 * Use latest version of the install code
 * Remove the label option (no longer supported by Intercom)
 * Various code improvements and DocBlock comments
 
-= 0.2 =
+= 0.2 (January 2012) =
 * Corrected user capability check when displaying reminder notice
 * Added description and code comments
 * Added 'Like this Plugin?' section to settings screen
 * Code tidy-up
 
-= 0.1 =
+= 0.1 (January 2012) =
 * Initial release
