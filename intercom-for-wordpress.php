@@ -5,7 +5,7 @@ Plugin URI: http://lumpylemon.co.uk/plugins/intercom-crm-for-wordpress
 Description: Integrate the <a href="http://intercom.io">Intercom</a> CRM and messaging app into your WordPress website.
 Author: Simon Blackbourn
 Author URI: https://twitter.com/lumpysimon
-Version: 0.8
+Version: 1.0
 
 
 
@@ -55,7 +55,7 @@ defined( 'ABSPATH' ) or die();
 
 
 
-define( 'LL_INTERCOM_VERSION', '0.8' );
+define( 'LL_INTERCOM_VERSION', '1.0' );
 
 
 
@@ -204,7 +204,7 @@ class ll_intercom {
 
 		// don't do anything if the app id and secret key fields have not been set
 
-		if ( !isset( $opts['app-id'] ) or !$opts['app-id'] )
+		if ( !isset( $opts[ 'app-id' ] ) or !$opts[ 'app-id' ] )
 			return;
 
 		// if we're sending the user role as custom data then
@@ -212,7 +212,7 @@ class ll_intercom {
 
 		$role = false;
 
-		if ( $opts['send-user-role'] ) {
+		if ( $opts[ 'send-user-role' ] ) {
 			$user = new WP_User( $current_user->ID );
 			if ( !empty( $user->roles ) and is_array( $user->roles ) ) {
 				foreach ( $user->roles as $user_role ) {
@@ -223,17 +223,17 @@ class ll_intercom {
 
 		// calculate the security hash using the user id
 
-		if ( isset( $opts['secure'] ) and $opts['secure'] ) {
+		if ( isset( $opts[ 'secure' ] ) and $opts[ 'secure' ] ) {
 			$hash = hash_hmac(
 				'sha256',
 				$current_user->ID,
-				$opts['secure']
+				$opts[ 'secure' ]
 				);
 		}
 
 		// set the required username format
 
-		switch ( $opts['username'] ) {
+		switch ( $opts[ 'username' ] ) {
 			case 'firstlast' :
 				$username = $current_user->user_firstname . ' ' . $current_user->user_lastname;
 			break;
@@ -247,11 +247,11 @@ class ll_intercom {
 		$custom = array();
 
 		if ( $role ) {
-			$custom['Role'] = $role;
+			$custom[ 'Role' ] = $role;
 		}
 
-		if ( $opts['send-user-url'] and isset( $current_user->user_url ) and !empty( $current_user->user_url ) ) {
-			$custom['Website'] = $current_user->user_url;
+		if ( $opts[ 'send-user-url' ] and isset( $current_user->user_url ) and !empty( $current_user->user_url ) ) {
+			$custom[ 'Website' ] = $current_user->user_url;
 		}
 
 		// allow plugins/themes to add their own custom data
@@ -265,18 +265,29 @@ class ll_intercom {
 		// now put everything together and generate the javascript output
 
 		$settings = array(
-			'app_id'     => $opts['app-id'],
+			'app_id'     => $opts[ 'app-id' ],
 			'user_id'    => $current_user->ID,
 			'email'      => $current_user->user_email,
 			'name'       => $username,
-			'created_at' => strtotime( $current_user->user_registered ),
-			'widget'     => (object) array(
-				'activator' => $activator
-				)
+			'created_at' => strtotime( $current_user->user_registered )
 			);
 
-		if ( isset( $opts['secure'] ) and $opts['secure'] ) {
-			$settings['user_hash'] = $hash;
+		// allow plugins/themes to use their own activator element
+
+		if ( $activator = apply_filters( 'll_intercom_activator', '' ) ) {
+			$settings[ 'widget' ] = (object) array(
+				'activator' => $activator
+				);
+		}
+
+		// allow plugins/themes to add their own company data
+
+		if ( $company = apply_filters( 'll_intercom_company_data', null ) ) {
+			$settings[ 'company' ] = (object) $company;
+		}
+
+		if ( isset( $opts[ 'secure' ] ) and $opts[ 'secure' ] ) {
+			$settings[ 'user_hash' ] = $hash;
 		}
 
 		if ( ! empty( $custom ) ) {
@@ -289,7 +300,7 @@ class ll_intercom {
 		$out .= '// Intercom for WordPress | v' . LL_INTERCOM_VERSION . ' | http://wordpress.org/plugins/intercom-for-wordpress' . "\n";
 		$out .= 'window.intercomSettings = ' . json_encode( (object) $settings ) . ';' . "\n";
 		$out .= '</script>' . "\n";
-		$out .= '<script>(function(){var w=window;var ic=w.Intercom;if(typeof ic==="function"){ic(\'reattach_activator\');ic(\'update\',intercomSettings);}else{var d=document;var i=function(){i.c(arguments)};i.q=[];i.c=function(args){i.q.push(args)};w.Intercom=i;function l(){var s=d.createElement(\'script\');s.type=\'text/javascript\';s.async=true;s.src=\'https://static.intercomcdn.com/intercom.v1.js\';var x=d.getElementsByTagName(\'script\')[0];x.parentNode.insertBefore(s,x);}if(w.attachEvent){w.attachEvent(\'onload\',l);}else{w.addEventListener(\'load\',l,false);}};})()</script>' . "\n";
+		$out .= '<script>(function(){var w=window;var ic=w.Intercom;if(typeof ic==="function"){ic(\'reattach_activator\');ic(\'update\',intercomSettings);}else{var d=document;var i=function(){i.c(arguments)};i.q=[];i.c=function(args){i.q.push(args)};w.Intercom=i;function l(){var s=d.createElement(\'script\');s.type=\'text/javascript\';s.async=true;s.src=\'https://widget.intercom.io/widget/' . $opts[ 'app-id' ] . '\';var x=d.getElementsByTagName(\'script\')[0];x.parentNode.insertBefore(s,x);}if(w.attachEvent){w.attachEvent(\'onload\',l);}else{w.addEventListener(\'load\',l,false);}}})()</script>' . "\n";
 
 		echo $out;
 
@@ -305,7 +316,7 @@ class ll_intercom {
 
 		$opts = self::get_settings();
 
-		if ( $opts['show-in-admin'] ) {
+		if ( $opts[ 'show-in-admin' ] ) {
 			self::output_install_code();
 		}
 
@@ -320,9 +331,9 @@ class ll_intercom {
 	 */
 	function notice() {
 
-		if ( isset( $_GET['page'] ) and ( 'intercom' == $_GET['page'] ) ) {
+		if ( isset( $_GET[ 'page' ] ) and ( 'intercom' == $_GET[ 'page' ] ) ) {
 
-			if ( is_network_admin() and isset( $_GET['updated'] ) ) { ?>
+			if ( is_network_admin() and isset( $_GET[ 'updated' ] ) ) { ?>
 				<div class="updated" id="ll-intercom-updated"><p><?php _e( 'Settings saved.' ); ?></p></div>
 				<?php
 			}
@@ -336,9 +347,9 @@ class ll_intercom {
 
 		$opts = self::get_settings();
 
-		if ( !is_network_admin() and ( !isset( $opts['app-id'] ) or !$opts['app-id'] ) ) {
+		if ( !is_network_admin() and ( !isset( $opts[ 'app-id' ] ) or !$opts[ 'app-id' ] ) ) {
 			echo '<div class="error" id="ll-intercom-notice"><p><strong>Intercom needs some attention</strong>. ';
-			if ( isset( $_GET['page'] ) and 'intercom' == $_GET['page'] ) {
+			if ( isset( $_GET[ 'page' ] ) and 'intercom' == $_GET[ 'page' ] ) {
 				echo 'Please enter your Intercom application ID';
 			} else {
 				echo 'Please <a href="options-general.php?page=intercom">configure the Intercom settings</a>';
@@ -416,14 +427,14 @@ class ll_intercom {
 						<tr valign="top">
 							<th scope="row">App ID</th>
 							<td>
-								<input name="ll-intercom[app-id]" type="text" value="<?php echo esc_attr( $opts['app-id'] ); ?>">
+								<input name="ll-intercom[app-id]" type="text" value="<?php echo esc_attr( $opts[ 'app-id' ] ); ?>">
 							</td>
 						</tr>
 
 						<tr valign="top">
 							<th scope="row">Secret key</th>
 							<td>
-								<input name="ll-intercom[secure]" type="text" value="<?php echo esc_attr( $opts['secure'] ); ?>">
+								<input name="ll-intercom[secure]" type="text" value="<?php echo esc_attr( $opts[ 'secure' ] ); ?>">
 							</td>
 						</tr>
 
@@ -431,12 +442,12 @@ class ll_intercom {
 							<th scope="row">Username format</th>
 							<td>
 								<label>
-									<input name="ll-intercom[username]" type="radio" value="firstlast" <?php checked( $opts['username'], 'firstlast' ); ?>>
+									<input name="ll-intercom[username]" type="radio" value="firstlast" <?php checked( $opts[ 'username' ], 'firstlast' ); ?>>
 									<span>First name &amp; last name</span>
 								</label>
 								<br>
 								<label>
-									<input name="ll-intercom[username]" type="radio" value="display" <?php checked( $opts['username'], 'display' ); ?>>
+									<input name="ll-intercom[username]" type="radio" value="display" <?php checked( $opts[ 'username' ], 'display' ); ?>>
 									<span>Display name</span>
 								</label>
 							</td>
@@ -445,21 +456,21 @@ class ll_intercom {
 						<tr valign="top">
 							<th scope="row">Send user role?</th>
 							<td>
-								<input name="ll-intercom[send-user-role]" type="checkbox" value="1" <?php checked( $opts['send-user-role'] ); ?>>
+								<input name="ll-intercom[send-user-role]" type="checkbox" value="1" <?php checked( $opts[ 'send-user-role' ] ); ?>>
 							</td>
 						</tr>
 
 						<tr valign="top">
 							<th scope="row">Send user website?</th>
 							<td>
-								<input name="ll-intercom[send-user-url]" type="checkbox" value="1" <?php checked( $opts['send-user-url'] ); ?>>
+								<input name="ll-intercom[send-user-url]" type="checkbox" value="1" <?php checked( $opts[ 'send-user-url' ] ); ?>>
 							</td>
 						</tr>
 
 						<tr valign="top">
 							<th scope="row">Show on admin pages?</th>
 							<td>
-								<input name="ll-intercom[show-in-admin]" type="checkbox" value="1" <?php checked( $opts['show-in-admin'] ); ?>>
+								<input name="ll-intercom[show-in-admin]" type="checkbox" value="1" <?php checked( $opts[ 'show-in-admin' ] ); ?>>
 							</td>
 						</tr>
 
@@ -523,12 +534,12 @@ class ll_intercom {
 	function settings_init() {
 
 		register_setting( 'intercom', 'll-intercom', array( $this, 'validate' ) );
-		if ( isset( $_REQUEST['_wpnonce'] ) and wp_verify_nonce( $_REQUEST['_wpnonce'], 'intercom-options' ) ) {
+		if ( isset( $_REQUEST[ '_wpnonce' ] ) and wp_verify_nonce( $_REQUEST[ '_wpnonce' ], 'intercom-options' ) ) {
 
 			$file = is_network_admin() ? 'settings.php' : 'options-general.php';
 
-			if ( isset( $_POST['ll-intercom-submit'] ) and is_network_admin() ) {
-				$opts = self::validate( $_POST['ll-intercom'] );
+			if ( isset( $_POST[ 'll-intercom-submit' ] ) and is_network_admin() ) {
+				$opts = self::validate( $_POST[ 'll-intercom' ] );
 				self::update_settings( $opts );
 				wp_redirect( add_query_arg( array(
 					'page'    => 'intercom',
@@ -550,12 +561,12 @@ class ll_intercom {
 	 */
 	function validate( $input ) {
 
-		$new['app-id']         = wp_kses( trim( $input['app-id'] ), array() );
-		$new['secure']         = wp_kses( trim( $input['secure'] ), array() );
-		$new['username']       = isset( $input['username'] ) ? wp_kses( trim( $input['username'] ), array() ) : 'firstlast';
-		$new['send-user-role'] = absint( $input['send-user-role'] );
-		$new['send-user-url']  = absint( $input['send-user-url'] );
-		$new['show-in-admin']  = absint( $input['show-in-admin'] );
+		$new[ 'app-id' ]         = wp_kses( trim( $input[ 'app-id' ] ), array() );
+		$new[ 'secure' ]         = wp_kses( trim( $input[ 'secure' ] ), array() );
+		$new[ 'username' ]       = isset( $input[ 'username' ] ) ? wp_kses( trim( $input[ 'username' ] ), array() ) : 'firstlast';
+		$new[ 'send-user-role' ] = absint( $input[ 'send-user-role' ] );
+		$new[ 'send-user-url' ]  = absint( $input[ 'send-user-url' ] );
+		$new[ 'show-in-admin' ]  = absint( $input[ 'show-in-admin' ] );
 
 		return $new;
 
