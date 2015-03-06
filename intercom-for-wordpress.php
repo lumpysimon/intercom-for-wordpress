@@ -300,12 +300,31 @@ class ll_intercom {
 		$out .= '// Intercom for WordPress | v' . LL_INTERCOM_VERSION . ' | http://wordpress.org/plugins/intercom-for-wordpress' . "\n";
 		$out .= 'window.intercomSettings = ' . json_encode( (object) $settings ) . ';' . "\n";
 		$out .= '</script>' . "\n";
-		$out .= '<script>(function(){var w=window;var ic=w.Intercom;if(typeof ic==="function"){ic(\'reattach_activator\');ic(\'update\',intercomSettings);}else{var d=document;var i=function(){i.c(arguments)};i.q=[];i.c=function(args){i.q.push(args)};w.Intercom=i;function l(){var s=d.createElement(\'script\');s.type=\'text/javascript\';s.async=true;s.src=\'https://widget.intercom.io/widget/' . $opts[ 'app-id' ] . '\';var x=d.getElementsByTagName(\'script\')[0];x.parentNode.insertBefore(s,x);}if(w.attachEvent){w.attachEvent(\'onload\',l);}else{w.addEventListener(\'load\',l,false);}}})()</script>' . "\n";
+
+		// allowing plugins/themes to define on which pages to display the widget - expects:
+		// 	 array('by_name' => array('page-name', 'other-name'), 'by_type' => array('post-type', 'other-type'))
+		// or:
+		// 	 false (widget not shown anywhere)
+		// or:
+		// 	 'all' (default - widget shown everywhere)
+
+		$widget_pages = apply_filters('ll_intercom_widget_pages', 'all');
+
+		$out .= '<script>(function(){var w=window;var ic=w.Intercom;if(typeof ic==="function"){ic(\'reattach_activator\');ic(\'update\',intercomSettings);}else{var d=document;var i=function(){i.c(arguments)};i.q=[];i.c=function(args){i.q.push(args)};w.Intercom=i;';
+		if (!empty($widget_pages)) {
+			$show_widget = true;
+			if (is_array($widget_pages)) {
+				global $post;
+				$show_widget = !empty($post) && (in_array($post->post_name, $widget_pages['by_name']) || in_array($post->post_type, $widget_pages['by_type']));
+			}
+			if ($show_widget) {
+				$out .=  'function l(){var s=d.createElement(\'script\');s.type=\'text/javascript\';s.async=true;s.src=\'https://widget.intercom.io/widget/' . $opts[ 'app-id' ] . '\';var x=d.getElementsByTagName(\'script\')[0];x.parentNode.insertBefore(s,x);}if(w.attachEvent){w.attachEvent(\'onload\',l);}else{w.addEventListener(\'load\',l,false);}';
+			}
+		}
+		$out .=  '}})()</script>' . "\n";
 
 		echo $out;
-
 	}
-
 
 
 	/**
