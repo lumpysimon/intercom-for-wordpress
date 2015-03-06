@@ -1,11 +1,11 @@
 <?php
 /*
 Plugin Name: Intercom for WordPress
-Plugin URI: http://lumpylemon.co.uk/plugins/intercom-crm-for-wordpress
+Plugin URI: https://wordpress.org/plugins/intercom-for-wordpress
 Description: Integrate the <a href="http://intercom.io">Intercom</a> CRM and messaging app into your WordPress website.
 Author: Simon Blackbourn
-Author URI: https://twitter.com/lumpysimon
-Version: 1.0
+Author URI: https://lumpylemon.co.uk
+Version: 1.1
 
 
 
@@ -15,7 +15,7 @@ Version: 1.0
 
 	Intercom is a customer relationship management (CRM) and messaging tool for web app owners. WordPress is being widely used as a web app nowadays, so Intercom is an ideal companion app to find out more about your users, contact them, get their instant feedback, and track your relationship with them over time so you can spot those who need attention.
 
-	This plugin generates the Javascript install code to integrate all of this functionality into your WordPress-powered web app, so you can track and communicate with your users both on the front-end and on your admin pages.
+	This plugin generates the Javascript snippet to integrate all of this functionality into your WordPress-powered web app, so you can track and communicate with your users both on the front-end and on your admin pages.
 
 	It allows you to securely connect to Intercom using secure key authentication mode, and you can optionally send extra custom data about your users.
 
@@ -43,7 +43,8 @@ Version: 1.0
 
 	I'm Simon Blackbourn, co-founder of Lumpy Lemon, a friendly UK-based WordPress design & development company specialising in custom-built WordPress CMS sites. I work mainly, but not exclusively, with not-for-profit organisations.
 
-	Find me on Twitter and GitHub: lumpysimon
+	Website: https://lumpylemon.co.uk
+	Twitter and GitHub: lumpysimon
 
 
 
@@ -55,11 +56,11 @@ defined( 'ABSPATH' ) or die();
 
 
 
-define( 'LL_INTERCOM_VERSION', '1.0' );
+define( 'LL_INTERCOM_VERSION', '1.1' );
 
 
 
-ll_intercom::get_instance();
+$ll_intercom = new ll_intercom;
 
 
 
@@ -67,27 +68,11 @@ class ll_intercom {
 
 
 
-	private static $instance = null;
-
-
-
-	public static function get_instance() {
-
-		if ( null == self::$instance ) {
-			self::$instance = new self;
-		}
-
-		return self::$instance;
-
-	}
-
-
-
 	/**
 	 * class constructor
 	 * register the activation and de-activation hooks and hook into a bunch of actions
 	 */
-	public function __construct() {
+	function __construct() {
 
 		register_activation_hook(   __FILE__, array( $this, 'hello'   ) );
 		register_deactivation_hook( __FILE__, array( $this, 'goodbye' ) );
@@ -158,7 +143,7 @@ class ll_intercom {
 	 */
 	function get_settings() {
 
-		if ( self::is_network_active() )
+		if ( $this->is_network_active() )
 			return get_site_option( 'll-intercom' );
 
 		return get_option( 'll-intercom' );
@@ -185,21 +170,24 @@ class ll_intercom {
 
 
 	/**
-	 * output the intercom javascript install code
+	 * construct and output the intercom javascript snippet
 	 * @return null
 	 */
 	function output_install_code() {
 
 		global $current_user;
 
-		// don't do anything if the current user is hidden from intercom
+		// don't do anything if:
+		// the current user is hidden from intercom
 		// or is not logged in
+		// or the ll_intercom_output_snippet filter returns false
 
-		if ( current_user_can( 'hide_from_intercom' ) or !is_user_logged_in() )
+		if ( current_user_can( 'hide_from_intercom' ) or !is_user_logged_in() or !apply_filters( 'll_intercom_output_snippet', true ) )
 			return;
 
 		// retrieve the options and user info
-		$opts = self::get_settings();
+
+		$opts = $this->get_settings();
 		get_currentuserinfo();
 
 		// don't do anything if the app id and secret key fields have not been set
@@ -262,7 +250,7 @@ class ll_intercom {
 
 		$activator = apply_filters( 'll_intercom_activator', '#IntercomDefaultWidget' );
 
-		// now put everything together and generate the javascript output
+		// construct the array of settings
 
 		$settings = array(
 			'app_id'     => $opts[ 'app-id' ],
@@ -296,9 +284,15 @@ class ll_intercom {
 			}
 		}
 
+		// jsonify the settings
+
+		$settings_json = json_encode( (object) $settings );
+
+		// generate and output the javascript
+
 		$out  = '<script id="IntercomSettingsScriptTag">';
-		$out .= '// Intercom for WordPress | v' . LL_INTERCOM_VERSION . ' | http://wordpress.org/plugins/intercom-for-wordpress' . "\n";
-		$out .= 'window.intercomSettings = ' . json_encode( (object) $settings ) . ';' . "\n";
+		$out .= '// Intercom for WordPress | v' . LL_INTERCOM_VERSION . ' | https://wordpress.org/plugins/intercom-for-wordpress' . "\n";
+		$out .= 'window.intercomSettings = ' . $settings_json . ';' . "\n";
 		$out .= '</script>' . "\n";
 		$out .= '<script>(function(){var w=window;var ic=w.Intercom;if(typeof ic==="function"){ic(\'reattach_activator\');ic(\'update\',intercomSettings);}else{var d=document;var i=function(){i.c(arguments)};i.q=[];i.c=function(args){i.q.push(args)};w.Intercom=i;function l(){var s=d.createElement(\'script\');s.type=\'text/javascript\';s.async=true;s.src=\'https://widget.intercom.io/widget/' . $opts[ 'app-id' ] . '\';var x=d.getElementsByTagName(\'script\')[0];x.parentNode.insertBefore(s,x);}if(w.attachEvent){w.attachEvent(\'onload\',l);}else{w.addEventListener(\'load\',l,false);}}})()</script>' . "\n";
 
@@ -309,15 +303,15 @@ class ll_intercom {
 
 
 	/**
-	 * check the options and if required output the install code in the admin footer
+	 * check the intercom options and if required output the snippet in the admin footer
 	 * @return null
 	 */
 	function output_admin_install_code() {
 
-		$opts = self::get_settings();
+		$opts = $this->get_settings();
 
 		if ( $opts[ 'show-in-admin' ] ) {
-			self::output_install_code();
+			$this->output_install_code();
 		}
 
 	}
@@ -326,7 +320,7 @@ class ll_intercom {
 
 	/**
 	 * show a 'settings saved' notice
-	 * and a friendly reminder if the app ID or secret key haven't been entered
+	 * and a friendly reminder if the intercom app ID or secret key haven't been entered
 	 * @return null
 	 */
 	function notice() {
@@ -340,12 +334,12 @@ class ll_intercom {
 
 		}
 
-		// show a reminder to users who can update options
+		// show an intercom reminder to users who can update options
 
 		if ( ! current_user_can( 'manage_options' ) )
 			return;
 
-		$opts = self::get_settings();
+		$opts = $this->get_settings();
 
 		if ( !is_network_admin() and ( !isset( $opts[ 'app-id' ] ) or !$opts[ 'app-id' ] ) ) {
 			echo '<div class="error" id="ll-intercom-notice"><p><strong>Intercom needs some attention</strong>. ';
@@ -362,7 +356,7 @@ class ll_intercom {
 
 
 	/**
-	 * create the relevant type of options page
+	 * create the relevant type of intercom options page
 	 * depending if we're single site or network active
 	 * @return null
 	 */
@@ -371,7 +365,7 @@ class ll_intercom {
 		// annoyingly multisite doesn't play nicely with the settings api
 		// so we need to account for that by creating a special page
 
-		if ( self::is_network_active() ) {
+		if ( $this->is_network_active() ) {
 
 			add_submenu_page(
 				'settings.php',
@@ -399,12 +393,12 @@ class ll_intercom {
 
 
 	/**
-	 * output the options page
+	 * output the intercom options page
 	 * @return null
 	 */
 	function render_options_page() {
 
-		$opts = self::get_settings();
+		$opts = $this->get_settings();
 
 		$action = is_network_admin() ? 'settings.php?page=intercom' : 'options.php';
 
@@ -527,7 +521,7 @@ class ll_intercom {
 
 
 	/**
-	 * use the WordPress settings api to initiate the various settings
+	 * use the WordPress settings api to initiate the various intercom settings
 	 * and if it's a network settings page then validate & update any submitted settings
 	 * @return null
 	 */
@@ -539,8 +533,8 @@ class ll_intercom {
 			$file = is_network_admin() ? 'settings.php' : 'options-general.php';
 
 			if ( isset( $_POST[ 'll-intercom-submit' ] ) and is_network_admin() ) {
-				$opts = self::validate( $_POST[ 'll-intercom' ] );
-				self::update_settings( $opts );
+				$opts = $this->validate( $_POST[ 'll-intercom' ] );
+				$this->update_settings( $opts );
 				wp_redirect( add_query_arg( array(
 					'page'    => 'intercom',
 					'updated' => true
@@ -555,7 +549,7 @@ class ll_intercom {
 
 
 	/**
-	 * make sure that no dodgy stuff is trying to sneak through
+	 * make sure that no dodgy stuff is trying to sneak into the intercom settings
 	 * @param  array $input options to validate
 	 * @return array        validated options
 	 */

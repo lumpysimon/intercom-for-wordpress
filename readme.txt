@@ -1,16 +1,16 @@
 === Intercom for WordPress ===
 Contributors: lumpysimon
-Donate link: http://lumpylemon.co.uk
+Donate link: https://lumpylemon.co.uk
 Tags: intercom, intercom.io, crm, messaging, contact form, support, email, feedback, customer relationship management, users
 Requires at least: 3.8
-Tested up to: 4.1
+Tested up to: 4.1.1
 Stable tag: trunk
 
 Easy integration of the Intercom CRM and messaging app into your WordPress website.
 
 == Description ==
 
-[Intercom](http://intercom.io) is a customer relationship management (CRM) and messaging tool for web app owners. WordPress is being widely used as a web app nowadays, so Intercom is an ideal companion app to find out more about your users, contact them, get their instant feedback, and track your relationship with them over time so you can spot those who need attention.
+[Intercom](https://intercom.io) is a customer relationship management (CRM) and messaging tool for web app owners. WordPress is being widely used as a web app nowadays, so Intercom is an ideal companion app to find out more about your users, contact them, get their instant feedback, and track your relationship with them over time so you can spot those who need attention.
 
 This plugin generates the Javascript install code to integrate all of this functionality into your WordPress-powered web app.
 
@@ -20,7 +20,7 @@ You can also optionally send extra custom data (attributes) about your users, as
 
 = What on earth is Intercom and what is a CRM? =
 
-Take a look at http://intercom.io, they explain it better than I can!
+Take a look at https://intercom.io, they explain it better than I can!
 
 = Does this plugin track all visitors to my site? =
 
@@ -107,6 +107,23 @@ function my_intercom_activator( $activator ) {
 }
 `
 
+= Can I completely disable the snippet on certain pages? =
+
+Sure, just use the `ll_intercom_output_snippet` filter. Here's an example:
+
+`
+add_filter( 'll_intercom_output_snippet', 'no_intercom_on_page_10' );
+
+function no_intercom_on_page_10( $show ) {
+
+	if ( is_page( 10 ) )
+		return false;
+
+	return true;
+
+}
+`
+
 = Are Intercom and this plugin secure? =
 
 It is highly recommended to enable Intercom's "secure mode". All communications between your website and Intercom will then use a secret key to generate a 'hash' with every request - this prevents users maliciously sending messages as another user. Please read Intercom's [secure mode documentation](http://docs.intercom.io/configuring-Intercom/enable-secure-mode).
@@ -126,14 +143,18 @@ Possibly, but I've not tried. I can only provide support if you're using the lat
 
 == Changelog ==
 
-= 1.0 (6th November 2104) =
+= 1.1 (6th March 2015) =
+* Add ll_intercom_output_snippet filter so plugins/themes can disable the snippet
+* Minor code tidy-up
+
+= 1.0 (6th November 2014) =
 * Improve the custom activator code so it doesn't override the 'Display messenger button' setting in Intercom
 
-= 0.9 (30th September 2104) =
+= 0.9 (30th September 2014) =
 * Add ll_intercom_company_data filter so plugins/themes can send company data
 * Update install code
 
-= 0.8 (23rd January 2104) =
+= 0.8 (23rd January 2014) =
 * Make secure mode optional
 * Update installation instructions and FAQ
 
