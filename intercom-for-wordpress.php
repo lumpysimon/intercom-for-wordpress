@@ -246,10 +246,6 @@ class ll_intercom {
 
 		$custom = apply_filters( 'll_intercom_custom_data', $custom );
 
-		// use intercom's default activator but allow plugins/themes to specify their own
-
-		$activator = apply_filters( 'll_intercom_activator', '#IntercomDefaultWidget' );
-
 		// construct the array of settings
 
 		$settings = array(
