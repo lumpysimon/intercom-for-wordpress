@@ -5,7 +5,7 @@ Plugin URI: https://wordpress.org/plugins/intercom-for-wordpress
 Description: Integrate the <a href="http://intercom.io">Intercom</a> CRM and messaging app into your WordPress website.
 Author: Simon Blackbourn
 Author URI: https://lumpylemon.co.uk
-Version: 1.1
+Version: 1.1.1
 
 
 
@@ -25,7 +25,7 @@ Version: 1.1
 	license
 	-------
 
-	This is a plugin for WordPress (http://wordpress.org).
+	This is a plugin for WordPress (https://wordpress.org).
 
 	Copyright Simon Blackbourn (simon@lumpylemon.co.uk)
 
@@ -41,7 +41,7 @@ Version: 1.1
 	about me
 	--------
 
-	I'm Simon Blackbourn, co-founder of Lumpy Lemon, a friendly UK-based WordPress design & development company specialising in custom-built WordPress CMS sites. I work mainly, but not exclusively, with not-for-profit organisations.
+	I'm Simon Blackbourn, co-founder of Lumpy Lemon, a friendly UK-based WordPress development and design company specialising in custom-built WordPress CMS sites and plugin development for custom functionality. I work mainly, but not exclusively, with not-for-profit organisations.
 
 	Website: https://lumpylemon.co.uk
 	Twitter and GitHub: lumpysimon
@@ -56,7 +56,7 @@ defined( 'ABSPATH' ) or die();
 
 
 
-define( 'LL_INTERCOM_VERSION', '1.1' );
+define( 'LL_INTERCOM_VERSION', '1.1.1' );
 
 
 
@@ -256,7 +256,11 @@ class ll_intercom {
 			'created_at' => strtotime( $current_user->user_registered )
 			);
 
-		// allow plugins/themes to use their own activator element
+		// allow plugins/themes to use their own activator element for the messenger
+
+		// you an also use this filter to selectively show the messenger for certain users or pages
+		// please see 'Can I selectively disable in-app messaging (e.g. for certain users or pages)?'
+		// https://wordpress.org/plugins/intercom-for-wordpress/faq
 
 		if ( $activator = apply_filters( 'll_intercom_activator', '' ) ) {
 			$settings[ 'widget' ] = (object) array(

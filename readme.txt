@@ -91,9 +91,9 @@ function my_intercom_company_data() {
 
 Please read Intercom's [company data documentation](http://docs.intercom.io/configuring-Intercom/grouping-users-by-company).
 
-= Can I use my own activator link instead of the default Intercom one? =
+= Can I use my own messenger activator link instead of the default Intercom one? =
 
-This plugin uses Intercom's default 'activator', but you can use your own one via the `ll_intercom_activator` filter.
+Yes, use the `ll_intercom_activator` filter to pass in the ID or class of your element. Please read the [custom style article](http://docs.intercom.io/configuring-Intercom/in-app-messenger#custom-style) to see how to construct your link element.
 
 Here's an example that uses all links with the `my-activator` class:
 
@@ -107,7 +107,7 @@ function my_intercom_activator( $activator ) {
 }
 `
 
-= Can I completely disable the snippet on certain pages? =
+= Can I completely disable tracking and messaging on certain pages or for certain users? =
 
 Sure, just use the `ll_intercom_output_snippet` filter. Here's an example:
 
@@ -120,6 +120,31 @@ function no_intercom_on_page_10( $show ) {
 		return false;
 
 	return true;
+
+}
+`
+
+= Can I track users but disable in-app messaging? =
+
+Yes, this is a setting in your intercom.io dashboard - please see [this article](http://docs.intercom.io/faqs/can-i-turn-off-the-in-app-messenger-button)
+
+= Can I selectively disable in-app messaging (e.g. for certain users or pages)? =
+
+Yes, you can continue tracking your users, but selectively disabling the messenger. There are two steps to this:
+
+1. Disable in-app messaging via your intercom.io dashboard (see the question above).
+
+2. Now you need to use the `ll_intercom_activator` filter. You should return '#IntercomDefaultWidget' (or the class/ID of your custom messenger activator element) to show the messenger, or an empty string if you do not want to show it. This example will hide the messenger on page 10:
+
+`
+add_filter( 'll_intercom_activator', 'no_intercom_messenger_on_page_10' );
+
+function no_intercom_messenger_on_page_10( $messenger ) {
+
+	if ( is_page( 10 ) )
+		return '';
+
+	return '#IntercomDefaultWidget';
 
 }
 `
@@ -142,6 +167,11 @@ Possibly, but I've not tried. I can only provide support if you're using the lat
 7. Highly recommended: for extra security, enable secure mode from within your Intercom app and enter your secret key in the settings page.
 
 == Changelog ==
+
+= 1.1.1 (11th March 2015) =
+* Add FAQ item about disabling messenger
+* Add FAQ item about usage of ll_intercom_activator filter for selective disabling of messenger
+* Remove redundant code
 
 = 1.1 (6th March 2015) =
 * Add ll_intercom_output_snippet filter so plugins/themes can disable the snippet
